@@ -194,6 +194,9 @@ aws s3 ls | grep -om1 'tfstate-.*'
 ```
 
 4.1.2. create if not exist.
+
+[Create Terraform pre-requisites for AWS using AWS CLI in 3 easy steps – My Devops Journal](https://skundunotes.com/2021/04/03/create-terraform-pre-requisites-for-aws-using-aws-cli-in-3-easy-steps/).
+
 ???
 
 ### 4.2. create identity provider.
@@ -204,7 +207,8 @@ aws s3 ls | grep -om1 'tfstate-.*'
 
 
 ```shell
-aws iam create-open-id-connect-provider ‐‐url "https://token.actions.githubusercontent.com" ‐‐thumbprint-list "6938fd4d98bab03faadb97b34396831e3780aea1" ‐‐client-id-list 'sts.amazonaws.com'
+ aws iam create-open-id-connect-provider --url "https://token.actions.githubusercontent.com" --thumbprint-list "6938fd4d98bab03fa
+adb97b34396831e3780aea1" --client-id-list "sts.amazonaws.com"
 ```
 
 ```shell
@@ -212,7 +216,28 @@ vim trustpolicyforGitHubOIDC.json
 ```
 
 ```json
-???
+{
+    "Version": "2012-10-17",
+    "Statement": [
+        {
+            "Effect": "Allow",
+            "Principal": {
+                "Federated": "<open_id_connect_provider_arn>"
+            },
+            "Action": "sts:AssumeRoleWithWebIdentity",
+            "Condition": {
+                "StringEquals": {
+                    "token.actions.githubusercontent.com:sub": "repo: <compeny>/<repository>:ref:refs/heads/<branch>",
+                    "token.actions.githubusercontent.com:aud": "sts.amazonaws.com"
+                }
+            }
+        }
+    ]
+}
+```
+
+```shell
+aws iam create-role --role-name GitHubAction-AssumeRoleWithAction --assume-role-policy-document file://trustpolicyforGitHubOIDC.json
 ```
 
 ### 4.3. update terraform configuration and workflow to use s3 backend.
@@ -274,7 +299,8 @@ on:
   pull_request:
 
 permissions:
-  contents: read
+  id-token: write # This is required for requesting the JWT
+  contents: read  # This is required for actions/checkout
 
 jobs:
   terraform:
@@ -292,10 +318,11 @@ jobs:
     - name: Checkout
       uses: actions/checkout@v3
 
-    - name: Configure AWS credentials
-      uses: aws-actions/configure-aws-credentials@v1
+    - name: configure aws credentials
+      uses: aws-actions/configure-aws-credentials@v3
       with:
-        ???
+        role-to-assume: <role>
+        role-session-name: samplerolesession
 
     # Install the latest version of Terraform CLI and configure the Terraform CLI configuration file with a Terraform Cloud user API token
     - name: Setup Terraform
@@ -319,6 +346,14 @@ jobs:
       if: github.ref == 'refs/heads/"main"' && github.event_name == 'push'
       run: terraform apply -auto-approve -input=false
 ```
+
+3.6. commit and push changes. `push` initializes workflow.
+```shell
+git add --all
+git commit -m 'add aws terraform workflow'
+git push
+```
+
 
 ## ???
 
