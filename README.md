@@ -242,46 +242,15 @@ aws iam create-role --role-name GitHubAction-AssumeRoleWithAction --assume-role-
 
 ### 4.3. update terraform configuration and workflow to use s3 backend.
 
-4.3.1.
-```shell
-vim main.tf
-```
+
+4.3.1. rename .github/workflow/terraform.yml to or create .github/workflow/aws_terraform.yml
 
 4.3.2.
-```terraform
-terraform {
-  required_providers {
-    aws = {
-      source  = "hashicorp/aws"
-      version = "~> 4.16"
-    }
-  }
-
-    backend "s3" {
-      bucket = "tfsate-5431fc87-88f1-495a-a440-b0ccdf187150"
-      key    = "github-actions-experiments/terraform.tfstate"
-      region = "eu-central-1"
-    }
-}
-
-# An example resource that does nothing.
-resource "null_resource" "example" {
-  triggers = {
-    value = "A example resource that does nothing!"
-  }
-}
-```
-
-Q: should s3 buckend backend name be hidden? should it be moved to secrets or some other github storage?
-
-4.3.3. rename .github/workflow/terraform.yml to or create .github/workflow/aws_terraform.yml
-
-4.3.4.
 ```shell
 vim .github/workflow/aws_terraform.yml
 ```
 
-4.3.5.
+4.3.3.
 ```yaml
 # This workflow installs the latest versions of AWS CLI and Terraform CLI and configures them.
 # On pull request events, this workflow will run `terraform init`, `terraform fmt`, and `terraform plan`.
@@ -291,7 +260,7 @@ vim .github/workflow/aws_terraform.yml
 #
 
 
-name: 'Terraform'
+name: 'terraform with s3 backend'
 
 on:
   push:
@@ -319,7 +288,7 @@ jobs:
       uses: actions/checkout@v3
 
     - name: configure aws credentials
-      uses: aws-actions/configure-aws-credentials@v3
+      uses: aws-actions/configure-aws-credentials@v4
       with:
         role-to-assume: <role>
         role-session-name: samplerolesession
@@ -347,12 +316,44 @@ jobs:
       run: terraform apply -auto-approve -input=false
 ```
 
-3.6. commit and push changes. `push` initializes workflow.
+4.3.4. commit and push changes. `push` initializes workflow.
 ```shell
 git add --all
 git commit -m 'add aws terraform workflow'
 git push
 ```
+
+4.3.5.
+```shell
+vim main.tf
+```
+
+4.3.6.
+```terraform
+terraform {
+  required_providers {
+    aws = {
+      source  = "hashicorp/aws"
+      version = "~> 4.16"
+    }
+  }
+
+    backend "s3" {
+      bucket = "tfsate-5431fc87-88f1-495a-a440-b0ccdf187150"
+      key    = "github-actions-experiments/terraform.tfstate"
+      region = "eu-central-1"
+    }
+}
+
+# An example resource that does nothing.
+resource "null_resource" "example" {
+  triggers = {
+    value = "A example resource that does nothing!"
+  }
+}
+```
+
+Q: should s3 buckend backend name be hidden? should it be moved to secrets or some other github storage?
 
 
 ## ???
