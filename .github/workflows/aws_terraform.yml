@@ -6,7 +6,7 @@
 #
 
 
-name: 'Terraform'
+name: 'terraform with s3 backend'
 
 on:
   push:
