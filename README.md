@@ -78,8 +78,10 @@ git push
 ```
 
 ## 3. create aws (empty) workflow.
+[GitHub - aws-actions/configure-aws-credentials: Configure AWS credential environment variables for use in other GitHub Actions.](https://github.com/aws-actions/configure-aws-credentials).
 
 there is using identity provider to connect aws and github.
+
 alternative. [Terraform with GitHub Actions : How to Manage & Scale](https://spacelift.io/blog/github-actions-terraform).
 Create an IAM user access key by using AWS Console and store it in GitHub Actions secrets named `AWS_ACCESS_KEY_ID` and `AWS_SECRET_ACCESS_KEY`. See the documentation for each action used below for the recommended IAM policies for this IAM user, and best practices on handling the access key credentials.
 
@@ -174,6 +176,7 @@ jobs:
       - name: configure aws credentials
         uses: aws-actions/configure-aws-credentials@v4
         with:
+          aws-region: ${{ env.AWS_REGION }}
           role-to-assume: arn:aws:iam::592679440475:role/GitHubAction-AssumeRoleWithAction
           role-session-name: samplerolesession
 
