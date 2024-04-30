@@ -5,22 +5,20 @@
 # Documentation for `hashicorp/setup-terraform` is located here: https://github.com/hashicorp/setup-terraform
 #
 
-
 name: 'terraform'
 
 on:
   push:
     branches: [ "main" ]
   pull_request:
+    branches: [ "main" ]
 
 permissions:
   contents: read
 
 jobs:
   terraform:
-    name: 'Terraform'
     runs-on: ubuntu-latest
-    environment: production
 
     # Use the Bash shell regardless whether the GitHub Actions runner is ubuntu-latest, macos-latest, or windows-latest
     defaults:
