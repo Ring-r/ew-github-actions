@@ -41,8 +41,8 @@ jobs:
         uses: aws-actions/configure-aws-credentials@v4
         with:
           aws-region: ${{ env.AWS_REGION }}
+          disable-retry: true
           role-to-assume: arn:aws:iam::592679440475:role/GitHubAction-AssumeRoleWithAction
-          role-session-name: samplerolesession
 
       # Runs a single command using the runners shell
       - name: Run a one-line script
