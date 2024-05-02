@@ -113,7 +113,7 @@ vim trustpolicyforGitHubOIDC.json
             "Action": "sts:AssumeRoleWithWebIdentity",
             "Condition": {
                 "StringEquals": {
-                    "token.actions.githubusercontent.com:sub": "repo: <compeny>/<repository>:ref:refs/heads/<branch>",
+                    "token.actions.githubusercontent.com:sub": "repo: <owner>/<repository>:ref:refs/heads/<branch>",
                     "token.actions.githubusercontent.com:aud": "sts.amazonaws.com"
                 }
             }
@@ -121,6 +121,11 @@ vim trustpolicyforGitHubOIDC.json
     ]
 }
 ```
+
+sub examples:
+- "repo: <owner>/<repository>:environment:prod"
+- "repo: <owner>/<repository>:ref:refs/heads/<branch>"
+- "repo: <owner>/<repository>:*"
 
 #### 3.2.4.
 ```shell
