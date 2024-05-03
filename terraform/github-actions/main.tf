@@ -34,7 +34,7 @@ data "aws_iam_policy_document" "github_actions_experiments_github_actions" {
     condition {
       test     = "StringEquals"
       variable = "token.actions.githubusercontent.com:sub"
-      values   = ["repo:Ring-r/github-actions-experiments:ref:refs/heads/<branch>"]
+      values   = ["repo:Ring-r/github-actions-experiments:ref:refs/heads/main"]
     }
 
     effect = "Allow"
