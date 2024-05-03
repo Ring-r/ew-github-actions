@@ -85,42 +85,114 @@ there is using identity provider to connect aws and github.
 alternative. [Terraform with GitHub Actions : How to Manage & Scale](https://spacelift.io/blog/github-actions-terraform).
 Create an IAM user access key by using AWS Console and store it in GitHub Actions secrets named `AWS_ACCESS_KEY_ID` and `AWS_SECRET_ACCESS_KEY`. See the documentation for each action used below for the recommended IAM policies for this IAM user, and best practices on handling the access key credentials.
 
-### 3.2. create identity provider.
+### 3.1. create identity provider and necessary role.
 
 [Use IAM roles to connect GitHub Actions to actions in AWS | AWS Security Blog](https://aws.amazon.com/blogs/security/use-iam-roles-to-connect-github-actions-to-actions-in-aws/).
 
-#### 3.2.1.
+#### 3.1.1. create openid connect provider for github.
+once for all projects.
 ```shell
- aws iam create-open-id-connect-provider --url "https://token.actions.githubusercontent.com" --thumbprint-list "6938fd4d98bab03fa
-adb97b34396831e3780aea1" --client-id-list "sts.amazonaws.com"
+aws iam create-open-id-connect-provider --url "https://token.actions.githubusercontent.com" --thumbprint-list "6938fd4d98bab03faadb97b34396831e3780aea1" --client-id-list "sts.amazonaws.com"
 ```
 
-#### 3.2.2.
+- [ ] get openid connect provider by url. use something like `aws iam list-open-id-connect-providers`.
+
+
+#### 3.1.2. create necessary role (terraform).
+https://registry.terraform.io/providers/hashicorp/aws/latest/docs/resources/iam_openid_connect_provider
+https://registry.terraform.io/providers/hashicorp/aws/latest/docs/resources/iam_role
+
+```shell
+mkdir -p .terraform/github-actions
+vim .terraform/github-actions/main.tf
+```
+
+```terraform
+# tfstate_bucket_name: `aws s3 ls | grep -om1 'tfstate-.*'`
+
+terraform {
+  required_providers {
+    aws = {
+      source  = "hashicorp/aws"
+      version = "~> 4.16"
+    }
+  }
+
+backend "s3" {
+  bucket = <tfstate_bucket_name>
+  key    = "<appname>/github-actions.tfstate"
+  region = "eu-central-1"
+}
+
+  required_version = ">= 1.3.6"
+}
+
+provider "aws" {
+  region = "eu-central-1"
+}
+
+data "aws_region" "current" {}
+
+data "aws_iam_policy_document" "<appname>_github_actions" {
+  statement {
+    actions = ["sts:AssumeRoleWithWebIdentity"]
+
+    condition {
+      test     = "StringEquals"
+      variable = "token.actions.githubusercontent.com:aud"
+      values   = ["sts.amazonaws.com"]
+    }
+
+    condition {
+      test     = "StringEquals"
+      variable = "token.actions.githubusercontent.com:sub"
+      values   = ["repo:<owner>/<repository>:ref:refs/heads/<branch>"]
+    }
+
+    effect  = "Allow"
+
+    principals {
+      identifiers = [<aws_iam_openid_connect_provider.github_actions.arn>]
+      type        = "Federated"
+    }
+  }
+}
+
+resource "aws_iam_role" "<appname>_github_actions" {
+  name               = "<AppName>GithubActions-AssumeRoleWithAction"
+  assume_role_policy = data.aws_iam_policy_document.<appname>_github_actions.json
+}
+```
+
+#### 3.1.2. create necessary role (aws cli). alternative.
 ```shell
 vim trustpolicyforGitHubOIDC.json
 ```
 
-#### 3.2.3.
 ```json
 {
     "Version": "2012-10-17",
     "Statement": [
         {
-            "Effect": "Allow",
-            "Principal": {
-                "Federated": "<open_id_connect_provider_arn>"
-            },
             "Action": "sts:AssumeRoleWithWebIdentity",
+
             "Condition": {
                 "StringEquals": {
                     "token.actions.githubusercontent.com:sub": "repo:<owner>/<repository>:ref:refs/heads/<branch>",
                     "token.actions.githubusercontent.com:aud": "sts.amazonaws.com"
                 }
+            },
+
+            "Effect": "Allow",
+
+            "Principal": {
+                "Federated": "<open_id_connect_provider_arn>"
             }
         }
     ]
 }
 ```
+
 or
 ```json
 // ...
@@ -131,19 +203,23 @@ or
 // ...
 ```
 
-#### 3.2.4.
 ```shell
-aws iam create-role --role-name GitHubAction-AssumeRoleWithAction --assume-role-policy-document file://trustpolicyforGitHubOIDC.json
+aws iam create-role --role-name AppNameGitHubAction-AssumeRoleWithAction --assume-role-policy-document file://trustpolicyforGitHubOIDC.json
 ```
 
-### 3.3.
+### 3.2.
+role_to_assume:
+```shell
+aws iam get-role --role-name "<AppName>GitHubActions-AssumeRoleWithAction"
+```
+
 ```shell
 vim .github/workflows/aws.yml
 ```
 
-### 3.4.
 ```yaml
 # This workflow use AWS CLI.
+# role_to_assume: `aws iam get-role --role-name "AppNameGitHubActions-AssumeRoleWithAction"`
 
 name: aws
 
@@ -186,8 +262,8 @@ jobs:
         uses: aws-actions/configure-aws-credentials@v4
         with:
           aws-region: ${{ env.AWS_REGION }}
-          role-to-assume: arn:aws:iam::592679440475:role/GitHubAction-AssumeRoleWithAction
-          role-session-name: samplerolesession
+          disable-retry: true
+          role-to-assume: <role_to_assume>
 
       # Runs a single command using the runners shell
       - name: Run a one-line script
@@ -200,7 +276,7 @@ jobs:
           echo test, and deploy your project.
 ```
 
-### 3.5. commit and push changes. `push` initializes workflow.
+### 3.3. commit and push changes. `push` initializes workflow.
 ```shell
 git add --all
 git commit -m 'add blank workflow'
