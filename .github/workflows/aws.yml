@@ -42,7 +42,7 @@ jobs:
         with:
           aws-region: ${{ env.AWS_REGION }}
           disable-retry: true
-          role-to-assume: arn:aws:iam::592679440475:role/GithubActionsExperimentsGithubActions-AssumeRoleWithAction
+          role-to-assume: arn:aws:iam::592679440475:role/github-actions-experiments-GithubActions-AssumeRoleWithAction
 
       # Runs a single command using the runners shell
       - name: Run a one-line script

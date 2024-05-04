@@ -89,26 +89,34 @@ Create an IAM user access key by using AWS Console and store it in GitHub Action
 
 [Use IAM roles to connect GitHub Actions to actions in AWS | AWS Security Blog](https://aws.amazon.com/blogs/security/use-iam-roles-to-connect-github-actions-to-actions-in-aws/).
 
-#### 3.1.1. create openid connect provider for github.
-once for all projects.
+#### 3.1.1. get or create openid connect provider for github.
+create (once for all projects):
 ```shell
 aws iam create-open-id-connect-provider --url "https://token.actions.githubusercontent.com" --thumbprint-list "6938fd4d98bab03faadb97b34396831e3780aea1" --client-id-list "sts.amazonaws.com"
 ```
 
-- [ ] get openid connect provider by url. use something like `aws iam list-open-id-connect-providers`.
-
+get:
+```shell
+aws iam list-open-id-connect-providers | grep -om1 'arn:aws:iam::[0123456789]*:oidc-provider/token.actions.githubusercontent.com'
+```
 
 #### 3.1.2. create necessary role (terraform).
-https://registry.terraform.io/providers/hashicorp/aws/latest/docs/resources/iam_openid_connect_provider
 https://registry.terraform.io/providers/hashicorp/aws/latest/docs/resources/iam_role
 
 ```shell
-mkdir -p .terraform/github-actions
-vim .terraform/github-actions/main.tf
+mkdir -p terraform/github-actions
+vim terraform/github-actions/main.tf
 ```
 
 ```terraform
-# tfstate_bucket_name: `aws s3 ls | grep -om1 'tfstate-.*'`
+# change locals, terraform.backend.s3.bucket, terraform.backend.s3.key.
+
+locals {
+  repository_owner                = "Ring-r"
+  repository_name                 = "github-actions-experiments"
+  repository_branch               = "main"
+  aws_iam_openid_connect_provider = ""  # use `aws iam list-open-id-connect-providers | grep -om1 'arn:aws:iam::[0123456789]*:oidc-provider/token.actions.githubusercontent.com'` to get correct data if it exists.
+}
 
 terraform {
   required_providers {
@@ -118,11 +126,11 @@ terraform {
     }
   }
 
-backend "s3" {
-  bucket = <tfstate_bucket_name>
-  key    = "<appname>/github-actions.tfstate"
-  region = "eu-central-1"
-}
+  backend "s3" {
+    bucket = ""  # use `aws s3 ls | grep -om1 'tfstate-.*'` to get correct data if it exists.
+    key    = ""  # use "${local.repository_name}/github-actions.tfstate"
+    region = "eu-central-1"
+  }
 
   required_version = ">= 1.3.6"
 }
@@ -133,7 +141,7 @@ provider "aws" {
 
 data "aws_region" "current" {}
 
-data "aws_iam_policy_document" "<appname>_github_actions" {
+data "aws_iam_policy_document" "github_actions" {
   statement {
     actions = ["sts:AssumeRoleWithWebIdentity"]
 
@@ -146,21 +154,21 @@ data "aws_iam_policy_document" "<appname>_github_actions" {
     condition {
       test     = "StringEquals"
       variable = "token.actions.githubusercontent.com:sub"
-      values   = ["repo:<owner>/<repository>:ref:refs/heads/<branch>"]
+      values   = ["repo:${local.repository_owner}/${local.repository_name}:ref:refs/heads/${local.repository_branch}"]
     }
 
-    effect  = "Allow"
+    effect = "Allow"
 
     principals {
-      identifiers = [<aws_iam_openid_connect_provider.github_actions.arn>]
+      identifiers = [local.aws_iam_openid_connect_provider]
       type        = "Federated"
     }
   }
 }
 
-resource "aws_iam_role" "<appname>_github_actions" {
-  name               = "<AppName>GithubActions-AssumeRoleWithAction"
-  assume_role_policy = data.aws_iam_policy_document.<appname>_github_actions.json
+resource "aws_iam_role" "github_actions" {
+  name               = "${local.repository_name}-GithubActions-AssumeRoleWithAction"
+  assume_role_policy = "data.aws_iam_policy_document.github_actions.json"
 }
 ```
 
@@ -204,13 +212,13 @@ or
 ```
 
 ```shell
-aws iam create-role --role-name AppNameGitHubAction-AssumeRoleWithAction --assume-role-policy-document file://trustpolicyforGitHubOIDC.json
+aws iam create-role --role-name <repository_name>-GitHubAction-AssumeRoleWithAction --assume-role-policy-document file://trustpolicyforGitHubOIDC.json
 ```
 
 ### 3.2.
 role_to_assume:
 ```shell
-aws iam get-role --role-name "<AppName>GitHubActions-AssumeRoleWithAction"
+aws iam get-role --role-name "<repository_name>-GitHubActions-AssumeRoleWithAction"
 ```
 
 ```shell
