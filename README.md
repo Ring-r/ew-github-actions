@@ -2,10 +2,11 @@
 
 experiments with github actions
 
+## steps to reproduce.
 
 [Understanding GitHub Actions - GitHub Docs](https://docs.github.com/en/actions/learn-github-actions/understanding-github-actions).
 
-## create base environment.
+### create base environment.
 
 create repository.
 run steps from [Quickstart for repositories - GitHub Docs](https://docs.github.com/en/repositories/creating-and-managing-repositories/quickstart-for-repositories).
@@ -15,7 +16,7 @@ default configuration changes:
 - description: experiments with github actions;
 - add a readme file;
 
-## create base workflow.
+### create base workflow.
 
 ```shell
 mkdir -p .github/workflows
@@ -67,9 +68,9 @@ last version can be find in [GitHub - actions/checkout: Action for checking out 
 
 commit and push changes to run workflow.
 
-## create aws workflow.
+### create aws workflow.
 
-### create necessary role.
+#### create necessary role.
 
  [Use IAM roles to connect GitHub Actions to actions in AWS | AWS Security Blog](https://aws.amazon.com/blogs/security/use-iam-roles-to-connect-github-actions-to-actions-in-aws/).
  [Configuring OpenID Connect in Amazon Web Services - GitHub Enterprise Cloud Docs](https://docs.github.com/en/enterprise-cloud@latest/actions/deployment/security-hardening-your-deployments/configuring-openid-connect-in-amazon-web-services)
@@ -78,7 +79,7 @@ commit and push changes to run workflow.
 
 there is using terraform to create necessary role.
 
-alternative. aws cli is used to create necessary policy and role (see research to find more).
+alternative. aws cli is used to create necessary policy and role (see links above).
 
 ```shell
 mkdir -p terraform/github-actions
@@ -182,7 +183,7 @@ terraform apply
 cd ../..
 ```
 
-### use credentials in aws workflow.
+#### use credentials in aws workflow.
 
 [GitHub - aws-actions/configure-aws-credentials: Configure AWS credential environment variables for use in other GitHub Actions.](https://github.com/aws-actions/configure-aws-credentials).
 
@@ -259,7 +260,7 @@ aws iam get-role --role-name "github-actions-experiments-GitHubActions-AssumeRol
 
 commit and push changes to run workflow.
 
-## create terraform workflow.
+### create terraform workflow.
 using aws and terraform workflows from github.com (look "Deploy to Amazon ECS" and "Terraform" in actions/new).
 
 ```shell
@@ -343,9 +344,9 @@ jobs:
 
 commit and push changes to run workflow.
 
-## create action to update aws lambda.
+### create action to update aws lambda.
 
-### 1. make research.
+#### TODO: make research.
 - [AWS Lambda Deploy · Actions · GitHub Marketplace · GitHub](https://github.com/marketplace/actions/aws-lambda-deploy);
 - [Using GitHub Actions to deploy serverless applications | AWS Compute Blog](https://aws.amazon.com/blogs/compute/using-github-actions-to-deploy-serverless-applications/);
 - [CI/CD для AWS Lambda через GitHub Actions / Хабр](https://habr.com/ru/articles/703416/). alternative variant.
