@@ -9,7 +9,7 @@
             "Action": "sts:AssumeRoleWithWebIdentity",
             "Condition": {
                 "StringEquals": {
-                    "token.actions.githubusercontent.com:sub": "repo:Ring-r/github-actions-experiments:ref:refs/heads/main",
+                    "token.actions.githubusercontent.com:sub": "repo:Ring-r/ew-github-actions:ref:refs/heads/main",
                     "token.actions.githubusercontent.com:aud": "sts.amazonaws.com"
                 }
             }

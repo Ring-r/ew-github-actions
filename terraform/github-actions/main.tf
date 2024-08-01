@@ -2,7 +2,7 @@
 
 locals {
   repository_owner                = "Ring-r"
-  repository_name                 = "github-actions-experiments"
+  repository_name                 = "ew-github-actions"
   repository_branch               = "main"
   aws_iam_openid_connect_provider = "arn:aws:iam::592679440475:oidc-provider/token.actions.githubusercontent.com" # use `aws iam list-open-id-connect-providers | grep -om1 'arn:aws:iam::[0123456789]*:oidc-provider/token.actions.githubusercontent.com'` to get correct data if it exists.
 }

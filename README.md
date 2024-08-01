@@ -1,22 +1,24 @@
-# github-actions-experiments
+# ew-github-actions
 
 experiments with github actions
 
-## steps to reproduce.
+## steps to reproduce
 
 [Understanding GitHub Actions - GitHub Docs](https://docs.github.com/en/actions/learn-github-actions/understanding-github-actions).
 
-### create base environment.
+### create base environment
 
-create repository.
+create repository.\
 run steps from [Quickstart for repositories - GitHub Docs](https://docs.github.com/en/repositories/creating-and-managing-repositories/quickstart-for-repositories).
 
 default configuration changes:
-- repository name: github-actions-experiments;
-- description: experiments with github actions;
+- repository name: `ew-github-actions`;
+- description: `experiments with github actions`;
 - add a readme file;
 
-### create base workflow.
+### create base workflow
+
+instead of using workflow from the guide the simple workflow from github.comi is clearer for me: https://github.com/Ring-r/ew-github-actions/actions/new.
 
 ```shell
 mkdir -p .github/workflows
@@ -62,20 +64,20 @@ jobs:
           echo test, and deploy your project.
 ```
 
-there are some warnings without using last version of actions.
-update version of used actions.
+there are some warnings without using last version of actions.\
+update version of used actions.\
 last version can be find in [GitHub - actions/checkout: Action for checking out a repo](https://github.com/actions/checkout).
 
 commit and push changes to run workflow.
 
-### create aws workflow.
+### create aws workflow
 
-#### create necessary role.
+#### create necessary role
 
- [Use IAM roles to connect GitHub Actions to actions in AWS | AWS Security Blog](https://aws.amazon.com/blogs/security/use-iam-roles-to-connect-github-actions-to-actions-in-aws/).
- [Configuring OpenID Connect in Amazon Web Services - GitHub Enterprise Cloud Docs](https://docs.github.com/en/enterprise-cloud@latest/actions/deployment/security-hardening-your-deployments/configuring-openid-connect-in-amazon-web-services)
- [Create a role for OpenID Connect federation (console) - AWS Identity and Access Management](https://docs.aws.amazon.com/IAM/latest/UserGuide/id_roles_create_for-idp_oidc.html#idp_oidc_Create_GitHub).
- [Terraform Registry](https://registry.terraform.io/providers/hashicorp/aws/latest/docs/resources/iam_role)
+ - [Use IAM roles to connect GitHub Actions to actions in AWS | AWS Security Blog](https://aws.amazon.com/blogs/security/use-iam-roles-to-connect-github-actions-to-actions-in-aws/).
+ - [Configuring OpenID Connect in Amazon Web Services - GitHub Enterprise Cloud Docs](https://docs.github.com/en/enterprise-cloud@latest/actions/deployment/security-hardening-your-deployments/configuring-openid-connect-in-amazon-web-services)
+ - [Create a role for OpenID Connect federation (console) - AWS Identity and Access Management](https://docs.aws.amazon.com/IAM/latest/UserGuide/id_roles_create_for-idp_oidc.html#idp_oidc_Create_GitHub).
+ - [Terraform Registry](https://registry.terraform.io/providers/hashicorp/aws/latest/docs/resources/iam_role)
 
 there is using terraform to create necessary role.
 
@@ -152,7 +154,7 @@ resource "aws_iam_role" "github_actions" {
 
 change necesary data:
 - <repository_owner> -> "Ring-r";
-- <repository_name> -> "github-actions-experiments";
+- <repository_name> -> "ew-github-actions";
 - <repository_branch> -> "main";
 - <aws_iam_openid_connect_provider>:
 use follow to get correct data:
@@ -170,7 +172,7 @@ aws s3 ls | grep -om1 'tfstate-.*'
 ```
 use follow to create correct data if it doesn't exist (should be created once for all owner projects (the same owner) which use terrafor s3 backend):
 TODO: describe how create correect bucket if it doesn't exist.
-- <terraform.backend.s3.key> -> "<repository_name>/github-actions.tfstate" -> "github-actions-experiments/github-actions.tfstate".
+- <terraform.backend.s3.key> -> "<repository_name>/github-actions.tfstate" -> "ew-github-actions/github-actions.tfstate".
 
 apply terraform configuration
 ```shell
@@ -183,13 +185,13 @@ terraform apply
 cd ../..
 ```
 
-#### use credentials in aws workflow.
+#### use credentials in aws workflow
 
 [GitHub - aws-actions/configure-aws-credentials: Configure AWS credential environment variables for use in other GitHub Actions.](https://github.com/aws-actions/configure-aws-credentials).
 
 there is using identity provider to connect aws and github.
 
-alternative. [Terraform with GitHub Actions : How to Manage & Scale](https://spacelift.io/blog/github-actions-terraform).
+alternative. [Terraform with GitHub Actions : How to Manage & Scale](https://spacelift.io/blog/github-actions-terraform).\
 Create an IAM user access key by using AWS Console and store it in GitHub Actions secrets named `AWS_ACCESS_KEY_ID` and `AWS_SECRET_ACCESS_KEY`.
 
 ```shell
@@ -247,20 +249,20 @@ jobs:
       # ...
 ```
 
-there are some warnings without using last version of actions.
-update version of used actions.
+there are some warnings without using last version of actions.\
+update version of used actions.\
 last version of configure-aws-credentials can be find in [GitHub - aws-actions/configure-aws-credentials: Configure AWS credential environment variables for use in other GitHub Actions.](https://github.com/aws-actions/configure-aws-credentials).
 
 change necesary data:
 - <role_to_assume>:
 use follow to get correct data:
 ```shell
-aws iam get-role --role-name "github-actions-experiments-GitHubActions-AssumeRoleWithAction"
+aws iam get-role --role-name "ew-github-actions-GitHubActions-AssumeRoleWithAction"
 ```
 
 commit and push changes to run workflow.
 
-### create terraform workflow.
+### create terraform workflow
 using aws and terraform workflows from github.com (look "Deploy to Amazon ECS" and "Terraform" in actions/new).
 
 ```shell
@@ -344,9 +346,9 @@ jobs:
 
 commit and push changes to run workflow.
 
-### create action to update aws lambda.
+### create action to update aws lambda
 
-#### TODO: make research.
+#### TODO: make research
 - [AWS Lambda Deploy · Actions · GitHub Marketplace · GitHub](https://github.com/marketplace/actions/aws-lambda-deploy);
 - [Using GitHub Actions to deploy serverless applications | AWS Compute Blog](https://aws.amazon.com/blogs/compute/using-github-actions-to-deploy-serverless-applications/);
 - [CI/CD для AWS Lambda через GitHub Actions / Хабр](https://habr.com/ru/articles/703416/). alternative variant.
